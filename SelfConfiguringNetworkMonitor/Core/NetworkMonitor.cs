@@ -11,6 +11,7 @@ namespace SelfConfiguringNetworkMonitor.Core
         private static Type? _warningServiceType;
         private static MethodInfo? _warningServiceMethod;
         private static List<object> _warningServiceParametersValues = new List<object>();
+        private static object _warningService;
         public static void BootstrapFromConfiguration()
         {
             var appsettingsConfiguration = new ConfigurationBuilder()
@@ -47,6 +48,20 @@ namespace SelfConfiguringNetworkMonitor.Core
                     throw new Exception(message: $"Configuration is invalid - parameter {parameter.Name} cannot be converted to expected type {parameter.ParameterType}.");
                 }
             }
+            Console.WriteLine("Configuration bootstrapped correctly. Monitoring is active..");
+        }
+        public static void Warn()
+        {
+            if(_warningService == null)
+            {
+                _warningService = Activator.CreateInstance(_warningServiceType);
+            }
+            var parameters = new List<object>();
+            foreach(var propertyBagInfo in _networkMonitorSettings.PropertyBag)
+            {
+                parameters.Add(propertyBagInfo.Value);
+            }
+            _warningServiceMethod?.Invoke(_warningService, _warningServiceParametersValues.ToArray());
         }
     }
 }
